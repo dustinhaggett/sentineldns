@@ -1,0 +1,16 @@
+.DS_Store
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+data/raw/*
+data/processed/*
+data/artifacts/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/artifacts/.gitkeep
+!data/simulations/sample.jsonl

@@ -1,0 +1,5 @@
+{"ts":"2026-02-17T10:00:00+00:00","domain":"apple.com","rcode":"NOERROR","qtype":"A"}
+{"ts":"2026-02-17T10:00:06+00:00","domain":"github.com","rcode":"NOERROR","qtype":"AAAA"}
+{"ts":"2026-02-17T10:00:17+00:00","domain":"secure-x1z7n8m2q3k4.top","rcode":"NXDOMAIN","qtype":"A"}
+{"ts":"2026-02-17T10:00:26+00:00","domain":"login-p9q4r8s2t6d1.xyz","rcode":"NOERROR","qtype":"A"}
+{"ts":"2026-02-17T10:00:41+00:00","domain":"wallet-z7n2m8x4c5v1.net","rcode":"NXDOMAIN","qtype":"AAAA"}
