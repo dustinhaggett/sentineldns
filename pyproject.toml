@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sentineldns"
+version = "0.1.0"
+description = "Local DNS risk scoring and anomaly detection MVP"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "SentinelDNS" }]
+dependencies = [
+  "fastapi>=0.111.0",
+  "uvicorn>=0.30.0",
+  "pydantic>=2.7.0",
+  "numpy>=1.26.0",
+  "pandas>=2.2.0",
+  "scikit-learn>=1.5.0",
+  "joblib>=1.4.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.2.0",
+  "httpx>=0.27.0",
+  "ruff>=0.5.0",
+  "black>=24.4.0",
+]
+extras = [
+  "tldextract>=5.1.0",
+  "publicsuffix2>=2.20191221",
+  "python-Levenshtein>=0.25.1",
+]
+
+[project.scripts]
+sentineldns = "sentineldns.cli.main:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

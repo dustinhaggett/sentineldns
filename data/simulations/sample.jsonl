@@ -1,0 +1,8 @@
+{"ts":"2026-02-17T10:00:00+00:00","domain":"apple.com","rcode":"NOERROR","qtype":"A"}
+{"ts":"2026-02-17T10:00:05+00:00","domain":"github.com","rcode":"NOERROR","qtype":"AAAA"}
+{"ts":"2026-02-17T10:00:12+00:00","domain":"wikipedia.org","rcode":"NOERROR","qtype":"A"}
+{"ts":"2026-02-17T10:00:19+00:00","domain":"news.ycombinator.com","rcode":"NOERROR","qtype":"A"}
+{"ts":"2026-02-17T10:00:33+00:00","domain":"verify-q9x8s2i5k1m3.top","rcode":"NXDOMAIN","qtype":"A"}
+{"ts":"2026-02-17T10:00:41+00:00","domain":"secure-z4q0n6v8c2p7.xyz","rcode":"NOERROR","qtype":"AAAA"}
+{"ts":"2026-02-17T10:00:48+00:00","domain":"login-l9r2b6h3t7d5.net","rcode":"NXDOMAIN","qtype":"A"}
+{"ts":"2026-02-17T10:01:00+00:00","domain":"paypal.com","rcode":"NOERROR","qtype":"A"}
