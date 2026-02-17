@@ -61,6 +61,20 @@ def test_health_and_domain_score_smoke(tmp_path: Path, monkeypatch) -> None:
     assert 0 <= payload["risk_score"] <= 100
     assert payload["risk_label"] in {"Normal", "Suspicious", "Likely Malicious"}
     assert isinstance(payload["reason_tags"], list)
+    # Guardrail: phishing-like lexical indicators should not remain Normal.
+    assert payload["risk_label"] != "Normal"
+
+    benign = client.post("/score/domain", json={"domain": "news.ycombinator.com"})
+    assert benign.status_code == 200
+    benign_payload = benign.json()
+    # Guardrail: known stable benign domains should not score as likely malicious.
+    assert benign_payload["risk_label"] != "Likely Malicious"
+
+    random_cheap_tld = client.post("/score/domain", json={"domain": "i6sbhgmo1gp6ol.top"})
+    assert random_cheap_tld.status_code == 200
+    random_payload = random_cheap_tld.json()
+    # Guardrail: random-looking cheap-TLD domains should not look fully benign.
+    assert random_payload["risk_score"] >= 35.0
 
     window_req = {
         "window_start": "2026-01-01T00:00:00+00:00",
