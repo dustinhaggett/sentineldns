@@ -45,4 +45,6 @@ struct AlertItem: Identifiable {
     let timestamp: String
     let label: String
     let summary: String
+    let recommendedAction: String
+    let reasonTags: [String]
 }

@@ -5,7 +5,7 @@ struct DashboardView: View {
 
     var body: some View {
         TabView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 18) {
                 HStack {
                     Text("Status:")
                     Text(client.status)
@@ -15,11 +15,43 @@ struct DashboardView: View {
                         .foregroundColor(statusColor)
                         .clipShape(Capsule())
                     Spacer()
-                    Button("Run Demo") {
+                    Button(client.isRunningDemo ? "Running..." : "Run Demo") {
                         Task { await client.runDemo() }
                     }
+                    .disabled(client.isRunningDemo)
                 }
+                HStack(spacing: 10) {
+                    Text("Service:")
+                    Text(client.serviceState.rawValue)
+                        .foregroundStyle(client.serviceState == .online ? .green : .orange)
+                    Spacer()
+                    Button("Check Connection") {
+                        Task { await client.checkServiceHealth() }
+                    }
+                }
+
                 Text(client.statusMessage).font(.body)
+                Text("Last demo run: \(client.lastDemoRunAt)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                GroupBox("Quick Domain Lookup") {
+                    HStack {
+                        TextField("example.com", text: $client.searchedDomain)
+                        Button("Score") {
+                            Task { await client.lookupDomain() }
+                        }
+                    }
+                    if let lookup = client.latestLookup {
+                        Divider().padding(.vertical, 4)
+                        Text("\(lookup.domain) -> \(lookup.riskLabel) (\(String(format: "%.1f", lookup.riskScore)))")
+                            .font(.callout)
+                        Text(lookup.reasonTags.joined(separator: ", "))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
                 if let error = client.serviceError {
                     Text(error)
                         .foregroundStyle(.orange)
@@ -38,6 +70,9 @@ struct DashboardView: View {
 
             SettingsView()
                 .tabItem { Text("Settings") }
+        }
+        .task {
+            await client.checkServiceHealth()
         }
     }
 

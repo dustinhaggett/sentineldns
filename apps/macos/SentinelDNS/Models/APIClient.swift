@@ -2,6 +2,12 @@ import Foundation
 
 @MainActor
 final class APIClient: ObservableObject {
+    enum ServiceState: String {
+        case unknown = "Unknown"
+        case online = "Online"
+        case offline = "Offline"
+    }
+
     @Published var serviceURL: String = "http://127.0.0.1:8787"
     @Published var useSimulation: Bool = true
     @Published var status: String = "Normal"
@@ -9,9 +15,59 @@ final class APIClient: ObservableObject {
     @Published var activity: [ActivityItem] = []
     @Published var alerts: [AlertItem] = []
     @Published var serviceError: String?
+    @Published var serviceState: ServiceState = .unknown
+    @Published var isRunningDemo: Bool = false
+    @Published var lastDemoRunAt: String = "Never"
+    @Published var searchedDomain: String = ""
+    @Published var latestLookup: DomainScoreResponse?
+
+    private let isoFormatter = ISO8601DateFormatter()
+    private let displayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .medium
+        return formatter
+    }()
+
+    func clearActivity() {
+        activity.removeAll()
+    }
+
+    func clearAlerts() {
+        alerts.removeAll()
+    }
+
+    func formatTimestamp(_ value: String) -> String {
+        if let dt = isoFormatter.date(from: value) {
+            return displayFormatter.string(from: dt)
+        }
+        return value
+    }
+
+    func checkServiceHealth() async {
+        guard let url = URL(string: "\(serviceURL)/health") else {
+            serviceState = .offline
+            serviceError = "Invalid service URL."
+            return
+        }
+        do {
+            let (_, resp) = try await URLSession.shared.data(from: url)
+            guard let http = resp as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+                throw URLError(.badServerResponse)
+            }
+            serviceState = .online
+            serviceError = nil
+        } catch {
+            serviceState = .offline
+            serviceError = "Start the service: python -m sentineldns.service.run --host 127.0.0.1 --port 8787"
+        }
+    }
 
     func runDemo() async {
+        isRunningDemo = true
+        defer { isRunningDemo = false }
         serviceError = nil
+        await checkServiceHealth()
         guard let simURL = Bundle.module.url(forResource: "SampleSimulatedEvents", withExtension: "jsonl")
             ?? URL(string: "file://\(FileManager.default.currentDirectoryPath)/SentinelDNS/Resources/SampleSimulatedEvents.jsonl")
         else {
@@ -30,7 +86,15 @@ final class APIClient: ObservableObject {
                 else { continue }
 
                 let score = try await scoreDomain(domain: domain)
-                activity.insert(ActivityItem(timestamp: ts, domain: domain, category: score.riskLabel, score: score.riskScore), at: 0)
+                activity.insert(
+                    ActivityItem(
+                        timestamp: formatTimestamp(ts),
+                        domain: domain,
+                        category: score.riskLabel,
+                        score: score.riskScore
+                    ),
+                    at: 0
+                )
                 if activity.count > 80 { activity.removeLast() }
                 windowBatch.append(obj)
             }
@@ -41,9 +105,25 @@ final class APIClient: ObservableObject {
                 status = alert.label
                 statusMessage = alert.summary
             }
+            lastDemoRunAt = displayFormatter.string(from: Date())
         } catch {
+            serviceState = .offline
             serviceError = "Start the service: python -m sentineldns.service.run --host 127.0.0.1 --port 8787"
             statusMessage = "Service unavailable. \(error.localizedDescription)"
+        }
+    }
+
+    func lookupDomain() async {
+        let trimmed = searchedDomain.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        do {
+            latestLookup = try await scoreDomain(domain: trimmed)
+            serviceError = nil
+            serviceState = .online
+        } catch {
+            latestLookup = nil
+            serviceState = .offline
+            serviceError = "Domain lookup failed. Check service status."
         }
     }
 
@@ -83,6 +163,12 @@ final class APIClient: ObservableObject {
             throw URLError(.badServerResponse)
         }
         let decoded = try JSONDecoder().decode(WindowScoreResponse.self, from: data)
-        return AlertItem(timestamp: tsEnd, label: decoded.anomalyLabel, summary: decoded.summary)
+        return AlertItem(
+            timestamp: formatTimestamp(tsEnd),
+            label: decoded.anomalyLabel,
+            summary: decoded.summary,
+            recommendedAction: decoded.recommendedAction,
+            reasonTags: decoded.reasonTags
+        )
     }
 }

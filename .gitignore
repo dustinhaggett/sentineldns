@@ -3,6 +3,7 @@
 __pycache__/
 *.pyc
 *.egg-info/
+apps/macos/.build/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
