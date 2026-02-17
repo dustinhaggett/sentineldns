@@ -1,6 +1,6 @@
 PYTHON ?= python3
 
-.PHONY: setup data dataset train serve simulate test format
+.PHONY: setup data dataset train serve simulate live test format
 
 setup:
 	$(PYTHON) -m pip install -e ".[dev]"
@@ -20,6 +20,9 @@ serve:
 
 simulate:
 	$(PYTHON) -m sentineldns.cli.main simulate
+
+live:
+	$(PYTHON) -m sentineldns.cli.main live-monitor --input-file data/simulations/sample.jsonl
 
 test:
 	$(PYTHON) -m pytest -q

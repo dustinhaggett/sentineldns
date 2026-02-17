@@ -70,6 +70,28 @@ Service runs by default at `http://127.0.0.1:8787`.
 sentineldns replay --file data/simulations/sample.jsonl --service-url http://127.0.0.1:8787
 ```
 
+## Privacy-first live monitor (local file tail)
+
+You can run a local-only live monitor that watches a JSONL event file, scores domains/windows,
+and writes privacy-minimized CSV outputs.
+
+```bash
+sentineldns live-monitor \
+  --input-file data/simulations/sample.jsonl \
+  --output-csv data/processed/live_scored_events.csv \
+  --alerts-csv data/processed/live_window_alerts.csv \
+  --exclude-pattern "*.bank*" \
+  --exclude-pattern "*.health*" \
+  --hash-domains \
+  --retention-days 14
+```
+
+Privacy controls:
+- `--exclude-pattern` skips domains entirely from storage
+- `--hash-domains` stores hashed domain identifiers instead of plain domains
+- `--retention-days` prunes old rows from output files
+- Local only: no cloud upload path is used
+
 ## Run tests
 
 ```bash
@@ -105,6 +127,7 @@ The app handles service downtime gracefully and will show a "Start the service" 
 - `sentineldns train-anomaly`
 - `sentineldns simulate`
 - `sentineldns replay --file data/simulations/sample.jsonl`
+- `sentineldns live-monitor --input-file /path/to/events.jsonl`
 
 ## Notes on feed sourcing
 

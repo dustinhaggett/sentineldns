@@ -13,6 +13,7 @@ import pandas as pd
 from sentineldns.config import PROCESSED_DIR, RAW_DIR, SIMULATION_DIR
 from sentineldns.data.build_dataset import build_labeled_dataset
 from sentineldns.data.download import download_phishtank, download_tranco, download_urlhaus
+from sentineldns.data.live_monitor import LivePrivacyConfig, run_live_monitor
 from sentineldns.data.simulations import write_simulation_jsonl
 from sentineldns.features.window_features import aggregate_events_to_windows
 from sentineldns.logging_utils import configure_logging
@@ -142,6 +143,25 @@ def cmd_replay(args: argparse.Namespace) -> None:
     print(f"Replay complete at {datetime.now().isoformat(timespec='seconds')}")
 
 
+def cmd_live_monitor(args: argparse.Namespace) -> None:
+    privacy = LivePrivacyConfig(
+        hash_domains=args.hash_domains,
+        hash_salt=args.hash_salt,
+        exclude_patterns=args.exclude_pattern,
+        retention_days=args.retention_days,
+    )
+    run_live_monitor(
+        input_file=Path(args.input_file),
+        output_csv=Path(args.output_csv),
+        alerts_csv=Path(args.alerts_csv),
+        privacy=privacy,
+        poll_seconds=args.poll_seconds,
+        window_minutes=args.window_minutes,
+        once=args.once,
+        start_at_end=args.start_at_end,
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="sentineldns")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -173,6 +193,20 @@ def build_parser() -> argparse.ArgumentParser:
     r.add_argument("--realtime", action="store_true")
     r.add_argument("--sqlite", default="data/processed/replay.sqlite")
     r.set_defaults(func=cmd_replay)
+
+    l = sub.add_parser("live-monitor")
+    l.add_argument("--input-file", required=True)
+    l.add_argument("--output-csv", default="data/processed/live_scored_events.csv")
+    l.add_argument("--alerts-csv", default="data/processed/live_window_alerts.csv")
+    l.add_argument("--poll-seconds", type=float, default=2.0)
+    l.add_argument("--window-minutes", type=int, default=5)
+    l.add_argument("--retention-days", type=int, default=14)
+    l.add_argument("--exclude-pattern", action="append", default=[])
+    l.add_argument("--hash-domains", action="store_true")
+    l.add_argument("--hash-salt", default="sentineldns-local")
+    l.add_argument("--start-at-end", action="store_true")
+    l.add_argument("--once", action="store_true")
+    l.set_defaults(func=cmd_live_monitor)
 
     return parser
 
